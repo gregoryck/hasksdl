@@ -43,35 +43,38 @@ main = do
 
 data Action = Quit | Up | Down | MoveLeft | MoveRight
 
-buttonPressed :: Event -> Maybe Action
-buttonPressed event =
--- TODO do notation
-        case eventPayload event of
-            KeyboardEvent keyboardEvent ->
-                case keyboardEventKeyMotion keyboardEvent of 
-                    Pressed ->
-                         case keysymKeycode (keyboardEventKeysym keyboardEvent) of
+
+pressedMotion :: KeyboardEventData -> Maybe Action
+pressedMotion keyboardEvent =
+      case keyboardEventKeyMotion keyboardEvent of 
+            Pressed -> case keysymKeycode (keyboardEventKeysym keyboardEvent) of
                              KeycodeQ -> Just Quit
                              KeycodeW -> Just Up
                              KeycodeS -> Just Down
                              KeycodeA -> Just MoveLeft 
                              KeycodeD -> Just MoveRight
                              _        -> Nothing
+            _       -> Nothing
 
-                    _ -> Nothing
-            _ -> Nothing
+keyboardPayload :: EventPayload -> Maybe KeyboardEventData
+keyboardPayload (KeyboardEvent keyboardEvent) = Just keyboardEvent
+keyboardPayload _                             = Nothing
+
+actionPressed :: Event -> Maybe Action
+actionPressed event = do
+   keyboardEvent <- keyboardPayload $ eventPayload event
+   action <- pressedMotion keyboardEvent
+   return action
 
 
 
 appLoop :: Renderer -> Texture -> IO ()
 appLoop renderer texture = do
   events <- pollEvents
-  let eventIsQPress event =
-        case eventPayload event of
-          KeyboardEvent keyboardEvent ->
-            keyboardEventKeyMotion keyboardEvent == Pressed &&
-            keysymKeycode (keyboardEventKeysym keyboardEvent) == KeycodeQ
-          _ -> False
-      qPressed = not (null (filter eventIsQPress events))
-  unless qPressed (appLoop renderer texture)
+  let eventToQuit event =
+        case actionPressed event of
+             Just Quit -> True
+             _         -> False
+      shallQuit = not (null (filter eventToQuit events))
+  unless shallQuit (appLoop renderer texture)
 
