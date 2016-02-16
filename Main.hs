@@ -3,7 +3,7 @@
 module Main where
 
 import Linear (V4(..), V2(..))
-import Control.Monad (unless)
+{-import Control.Monad (unless)-}
 import SDL
 import Linear.Affine 
 import Foreign.C.Types
@@ -70,11 +70,9 @@ actionPressed event = do
 
 appLoop :: Renderer -> Texture -> IO ()
 appLoop renderer texture = do
-  events <- pollEvents
-  let eventToQuit event =
-        case actionPressed event of
-             Just Quit -> True
-             _         -> False
-      shallQuit = not (null (filter eventToQuit events))
-  unless shallQuit (appLoop renderer texture)
+  event <- waitEvent
+  let action = actionPressed event
+  case action of
+      Just Quit -> return ()
+      _         -> appLoop renderer texture
 
