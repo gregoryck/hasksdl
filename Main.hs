@@ -11,7 +11,10 @@ import Foreign.C.Types
 
 p1 :: Point V2 Foreign.C.Types.CInt
 p1 = P (V2 291 97)
-rect :: Rectangle CInt
+
+type Location = Rectangle CInt
+
+rect :: Location
 rect = Rectangle p1 (V2 26 46)
 
 data SizedTex = SizedTex SDL.Texture (V2 CInt)
@@ -34,12 +37,16 @@ main = do
   initializeAll
   window <- createWindow "My SDL Application" defaultWindow
   renderer <- createRenderer window (-1) defaultRenderer
-  texture <- loadTexture renderer "npcs.bmp"
+  spriteSheet <- loadTexture renderer "npcs.bmp"
   rendererDrawColor renderer $= V4 0 0 255 255
   clear renderer
-  copy renderer (unsized texture) (Just rect) (Just rect)
+  appLoop renderer spriteSheet [girl]
+
+render :: Renderer -> SizedTex -> Character -> IO ()
+render renderer spriteSheet (Character spriteSheetLoc gameLoc) = do
+  copy renderer (unsized spriteSheet) (Just spriteSheetLoc) (Just gameLoc)
   present renderer
-  appLoop renderer (unsized texture)
+  
 
 data Action = Quit | Up | Down | MoveLeft | MoveRight
 
@@ -66,13 +73,22 @@ actionPressed event = do
    action <- pressedMotion keyboardEvent
    return action
 
+data Character = Character Location Location
+girl :: Character
+girl = Character rect rect
 
+moveRight :: Character -> Character
+moveRight (Character sourceLoc (
+          Rectangle (P (V2 x1 y1)) (V2 x2 y2))) = 
+            Character sourceLoc $ Rectangle (P (V2 (x1+10) y1)) (V2 x2 y2)
 
-appLoop :: Renderer -> Texture -> IO ()
-appLoop renderer texture = do
+appLoop :: Renderer -> SizedTex -> [Character] -> IO ()
+appLoop renderer spriteSheet [girl] = do
+  render renderer spriteSheet girl
   event <- waitEvent
   let action = actionPressed event
   case action of
-      Just Quit -> return ()
-      _         -> appLoop renderer texture
+      Just Quit      -> return ()
+      Just MoveRight -> appLoop renderer spriteSheet [moveRight girl]
+      _              -> appLoop renderer spriteSheet [girl]
 
