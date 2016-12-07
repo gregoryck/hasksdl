@@ -5,9 +5,8 @@ module Main where
 import Linear (V4(..), V2(..))
 {-import Control.Monad (unless)-}
 import SDL
-import Linear.Affine 
+-- import Linear.Affine 
 import Foreign.C.Types
-
 
 p1 :: Point V2 Foreign.C.Types.CInt
 p1 = P (V2 291 97)
@@ -70,8 +69,8 @@ keyboardPayload _                             = Nothing
 actionPressed :: Event -> Maybe Action
 actionPressed event = do
    keyboardEvent <- keyboardPayload $ eventPayload event
-   action <- pressedMotion keyboardEvent
-   return action
+   pressedMotion keyboardEvent
+   
 
 data Character = Character Location Location
 girl :: Character
@@ -83,12 +82,26 @@ moveRight (Character sourceLoc (
             Character sourceLoc $ Rectangle (P (V2 (x1+10) y1)) (V2 x2 y2)
 
 appLoop :: Renderer -> SizedTex -> [Character] -> IO ()
-appLoop renderer spriteSheet [girl] = do
-  render renderer spriteSheet girl
+appLoop renderer spriteSheet [girl'] = do
+  render renderer spriteSheet girl'
   event <- waitEvent
   let action = actionPressed event
   case action of
       Just Quit      -> return ()
-      Just MoveRight -> appLoop renderer spriteSheet [moveRight girl]
-      _              -> appLoop renderer spriteSheet [girl]
+      Just MoveRight -> appLoop renderer spriteSheet [moveRight girl']
+      _              -> appLoop renderer spriteSheet [girl']
+
+appLoop renderer spriteSheet [] = do
+  event <- waitEvent
+  let action = actionPressed event
+  case action of
+      Just Quit      -> return ()
+      _              -> appLoop renderer spriteSheet []
+
+
+appLoop renderer spriteSheet (girl':_unImplementedCharacters) = 
+  appLoop renderer spriteSheet [girl']
+
+
+
 
