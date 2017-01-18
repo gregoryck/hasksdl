@@ -76,32 +76,31 @@ data Character = Character Location Location
 girl :: Character
 girl = Character rect rect
 
-moveRight :: Character -> Character
-moveRight (Character sourceLoc (
+moveRight :: [Character] -> [Character]
+moveRight = fmap moveCharacterRight 
+
+moveCharacterRight :: Character -> Character
+moveCharacterRight (Character sourceLoc (
           Rectangle (P (V2 x1 y1)) (V2 x2 y2))) = 
             Character sourceLoc $ Rectangle (P (V2 (x1+10) y1)) (V2 x2 y2)
 
+
+
+renderCharacters :: Renderer -> SizedTex -> [Character] -> IO ()
+renderCharacters renderer spriteSheet (character:cs) =  do
+  render renderer spriteSheet character
+  renderCharacters renderer spriteSheet cs
+  
+renderCharacters _r _s [] = return ()
+
+
 appLoop :: Renderer -> SizedTex -> [Character] -> IO ()
-appLoop renderer spriteSheet [girl'] = do
-  render renderer spriteSheet girl'
+appLoop renderer spriteSheet characters = do
+  renderCharacters renderer spriteSheet characters
   event <- waitEvent
   let action = actionPressed event
   case action of
       Just Quit      -> return ()
-      Just MoveRight -> appLoop renderer spriteSheet [moveRight girl']
-      _              -> appLoop renderer spriteSheet [girl']
-
-appLoop renderer spriteSheet [] = do
-  event <- waitEvent
-  let action = actionPressed event
-  case action of
-      Just Quit      -> return ()
-      _              -> appLoop renderer spriteSheet []
-
-
-appLoop renderer spriteSheet (girl':_unImplementedCharacters) = 
-  appLoop renderer spriteSheet [girl']
-
-
-
+      Just MoveRight -> appLoop renderer spriteSheet $ moveRight characters
+      _              -> appLoop renderer spriteSheet characters
 
