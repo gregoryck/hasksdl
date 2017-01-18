@@ -43,6 +43,7 @@ main = do
 
 render :: Renderer -> SizedTex -> Character -> IO ()
 render renderer spriteSheet (Character spriteSheetLoc gameLoc) = do
+  clear renderer
   copy renderer (unsized spriteSheet) (Just spriteSheetLoc) (Just gameLoc)
   present renderer
   
