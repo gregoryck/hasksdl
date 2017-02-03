@@ -18,6 +18,7 @@ rect = Rectangle p1 (V2 26 46)
 
 data SizedTex = SizedTex SDL.Texture (V2 CInt)
 
+
 loadTexture :: SDL.Renderer -> FilePath -> IO SizedTex
 loadTexture r filePath = do
   surface <- SDL.loadBMP filePath
@@ -36,12 +37,12 @@ main = do
   initializeAll
   window <- createWindow "My SDL Application" defaultWindow
   renderer <- createRenderer window (-1) defaultRenderer
-  spriteSheet <- loadTexture renderer "npcs.bmp"
+  spriteSurface <- SDL.loadBMP "npcs.bmp"
   rendererDrawColor renderer $= V4 0 0 255 255
   clear renderer
-  appLoop renderer spriteSheet [girl]
+  appLoop renderer spriteSurface [girl]
 
-render :: Renderer -> SizedTex -> Character -> IO ()
+render :: Renderer -> Surface -> Character -> IO ()
 render renderer spriteSheet (Character spriteSheetLoc gameLoc) = do
   clear renderer
   copy renderer (unsized spriteSheet) (Just spriteSheetLoc) (Just gameLoc)
